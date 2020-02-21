@@ -20,6 +20,7 @@ app.use(require('express-session')({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 //important and necessary code for passport authentication
@@ -28,7 +29,7 @@ app.get('/',(req,res)=>{
     res.render('home');
 });
 
-app.get('/secret',(req,res)=>{
+app.get('/secret',isLoggedIn,(req,res)=>{
     res.render('secret');
 });
 
@@ -50,10 +51,30 @@ app.post('/register',(req,res)=>{
     })
      
 });
+
 app.get('/login',(req,res)=>{
     res.render('login');
 });
 
+app.post('/login', passport.authenticate("local",{
+    successRedirect:"/secret",
+    failureRedirect:"/login"
+}),(req,res)=>{
+
+});
+
+app.get("/logout",(req,res)=>{
+   req.logout();
+   res.redirect('/');
+});
+ ///middleware to authenticate and  open secret page 
+function isLoggedIn(req,res,next)
+{
+    if(req.isAuthenticated()){
+        return next();
+    }
+    res.redirect("/login");
+}
 
 app.listen(3000,()=>{
     console.log('server started at 3000 port');
